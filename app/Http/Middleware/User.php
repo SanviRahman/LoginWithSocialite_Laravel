@@ -16,7 +16,13 @@ class User
     public function handle(Request $request, Closure $next): Response
     {
         if (! Auth::guard('web')->check()) {
-            return redirect()->route('login');
+            return redirect()->route('user_login');
+        }
+        // Check if user is verified
+        if (Auth::guard('web')->user()->status == 0) {
+            Auth::guard('web')->logout();
+            return redirect()->route('user_login')
+                ->with('error', 'Your email is not verified. Please verify your email first.');
         }
         return $next($request);
     }

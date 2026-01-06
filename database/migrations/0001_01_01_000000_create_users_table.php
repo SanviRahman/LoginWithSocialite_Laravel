@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('token')->nullable();
             $table->string('status')->default(0)->comment('0=pending, 1=active, 2=suspended');
             $table->string('google_id')->nullable();
+            $table->string('facebook_id')->nullable();
             $table->string('password');
             $table->timestamps();
         });

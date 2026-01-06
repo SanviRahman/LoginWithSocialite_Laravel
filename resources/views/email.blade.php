@@ -1,17 +1,20 @@
 <h2>{{ $subject }}</h2>
-<p>{{ $body }}</p>
+<p>{!! $body !!}</p>
 
 @if(isset($link) && $link)
 <div>
     @php
     $isResetPassword = str_contains($subject,'Reset Password');
     $isRegistration = str_contains($subject,'Registration');
+    $isVerification = str_contains($subject,'Email Verification Required');
     @endphp
 
     @if($isResetPassword)
-    <a href="{{ $link }}">Reset Password.</a>
+    <a href="{{ $link }}">Reset Password</a>
     @elseif($isRegistration)
-    <a href="{{ $link }}">Verify Email.</a>
+    <a href="{{ $link }}">Verify Email</a>
+    @else
+    <a href="{{ $link }}">Verify Email</a>
     @endif
 </div>
 <p><small>This link will expire in 24 hours for security reasons.</small></p>

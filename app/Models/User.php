@@ -30,6 +30,7 @@ class User extends Authenticatable
         'token',
         'password',
         'google_id',
+        'facebook_id',
     ];
 
     /**

@@ -33,6 +33,13 @@ Route::post('/user/reset_password/{token}/{email}',[UserController::class,'reset
 Route::get('/user/authorized/google',[GoogleController::class,'redirectToGoogle']);
 Route::get('/user/authorized/google/callback',[GoogleController::class,'handleGoogleCallback']);
 
+//User login with facebook
+Route::get('/user/authorized/facebook',[GoogleController::class,'redirectToFacebook']);
+Route::get('/user/authorized/facebook/callback',[GoogleController::class,'handleFacebookCallback']);
+
+
+
+
 //Admin
 Route::middleware('admin')->prefix('admin')->group(function(){
     Route::get('/admin/dashboard',[AdminController::class,'admin_dashboard'])->name('admin_dashboard');
@@ -47,6 +54,7 @@ Route::get('/admin/forget_password',[AdminController::class,'admin_forget_passwo
 Route::post('/admin/forget_password',[AdminController::class,'admin_forget_password_submit'])->name('admin_forget_password_submit');
 Route::get('/admin/reset_password/{token}/{email}',[AdminController::class,'admin_reset_password'])->name('admin_reset_password');
 Route::post('/admin/reset_password/{token}/{email}',[AdminController::class,'admin_reset_password_submit'])->name('admin_reset_password_submit');
+
 Route::fallback(function(){
     return view('errors.404');
 });

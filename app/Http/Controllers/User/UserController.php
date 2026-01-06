@@ -13,6 +13,18 @@ class UserController extends Controller
 {
     public function dashboard()
     {
+        // Check if user is not verified
+        if (Auth::guard('web')->user()->status == 0) {
+            Auth::guard('web')->logout();
+            return redirect()->route('user_login')
+                ->with('error', 'Your email is not verified. Please verify your email first.');
+        }
+
+        // Check if user is logged in
+        if (! Auth::guard('web')->check()) {
+            return redirect()->route('user_login')->with('error', 'Please login first.');
+        }
+
         return view('user.dashboard');
     }
 
@@ -27,7 +39,7 @@ class UserController extends Controller
         $request->validate([
             'name'                  => 'required',
             'email'                 => 'required|email|unique:users,email',
-            'password'              => 'required',
+            'password'              => 'required|min:6',
             'password_confirmation' => 'required|same:password',
         ]);
 
@@ -59,17 +71,27 @@ class UserController extends Controller
     }
 
     //User Verification
+    //User Verification
     public function registration_verify($token, $email)
     {
         $user = User::where('email', $email)->where('token', $token)->first();
         if (! $user) {
             return redirect()->route('user_login')->with('error', 'Invalid token or email');
         }
+
         $user->token  = '';
         $user->status = 1;
         $user->save();
 
-        return redirect()->route('user_login')->with('success', 'Email verification successful. You can login now.');
+        // Check if it's a social login user (Google/Facebook)
+        if ($user->google_id || $user->facebook_id) {
+            // Auto login social users after verification
+            Auth::login($user);
+            return redirect()->route('dashboard')->with('success', 'Email verification successful! You are now logged in.');
+        } else {
+            // Regular users need to login manually
+            return redirect()->route('user_login')->with('success', 'Email verification successful. You can login now.');
+        }
     }
 
     //User Login
@@ -85,10 +107,32 @@ class UserController extends Controller
             'password' => 'required',
         ]);
 
+        // First check if user exists
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return redirect()->back()
+                ->withInput($request->only('email'))
+                ->with('error', 'Invalid credentials.');
+        }
+
+        // Check if user is not verified (including social login users)
+        if ($user->status == 0) {
+            // If user has social ID but not verified
+            if ($user->google_id || $user->facebook_id) {
+                return redirect()->back()
+                    ->withInput($request->only('email'))
+                    ->with('warning', 'Your email is not verified. Please check your email for verification link.');
+            } else {
+                return redirect()->back()
+                    ->withInput($request->only('email'))
+                    ->with('error', 'Your email is not verified. Please check your email for verification link.');
+            }
+        }
+
         if (Auth::guard('web')->attempt([
             'email'    => $request->email,
             'password' => $request->password,
-            'status'   => 1,
         ])) {
             $request->session()->regenerate();
             return redirect()->route('dashboard')->with('success', 'Login successful');
@@ -96,12 +140,13 @@ class UserController extends Controller
 
         return redirect()->back()
             ->withInput($request->only('email'))
-            ->with('error', 'Invalid credentials or account is inactive.');
+            ->with('error', 'Invalid credentials.');
     }
+
     public function logout()
     {
         Auth::guard('web')->logout();
-        return redirect()->route('user_login')->with('Logout Successfully');
+        return redirect()->route('user_login')->with('success', 'Logout Successfully');
     }
 
     //Forget password
@@ -113,13 +158,18 @@ class UserController extends Controller
     public function forget_password_submit(Request $request)
     {
         $request->validate([
-            'email' => 'required',
+            'email' => 'required|email',
         ]);
 
         $user = User::where('email', $request->email)->first();
 
         if (! $user) {
             return redirect()->back()->with('error', 'Email not found.');
+        }
+
+        // Check if user is verified
+        if ($user->status == 0) {
+            return redirect()->back()->with('error', 'Your email is not verified. Please verify your email first.');
         }
 
         $token       = hash('sha256', time());
@@ -135,12 +185,12 @@ class UserController extends Controller
         return redirect()->back()->with('success', 'Reset password link has been sent to your email.');
     }
 
-    //Reset Passwaord
+    //Reset Password
     public function reset_password($token, $email)
     {
         $user = User::where('email', $email)->where('token', $token)->first();
         if (! $user) {
-            return redirect()->route('user_login', 'Invalid token or email');
+            return redirect()->route('user_login')->with('error', 'Invalid token or email');
         }
         return view('user.reset_password', compact('token', 'email'));
     }
@@ -148,7 +198,7 @@ class UserController extends Controller
     public function reset_password_submit(Request $request, $token, $email)
     {
         $request->validate([
-            'password'              => 'required',
+            'password'              => 'required|min:6',
             'password_confirmation' => 'required|same:password',
         ]);
 
@@ -158,10 +208,9 @@ class UserController extends Controller
             return redirect()->route('user_login')->with('error', 'Invalid or expired reset link.');
         }
 
-        // শুধুমাত্র ভ্যালিড হলে পাসওয়ার্ড আপডেট করো
         $user->password = Hash::make($request->password);
         $user->token    = '';
-        $user->update();
+        $user->save();
 
         return redirect()->route('user_login')->with('success', 'Password reset successfully. Please login.');
     }
@@ -169,6 +218,13 @@ class UserController extends Controller
     //User Profile
     public function profile()
     {
+        // Check if user is verified
+        if (Auth::guard('web')->user()->status == 0) {
+            Auth::guard('web')->logout();
+            return redirect()->route('user_login')
+                ->with('error', 'Your email is not verified. Please verify your email first.');
+        }
+
         return view('user.profile');
     }
 
@@ -177,8 +233,15 @@ class UserController extends Controller
         //Get current user
         $user = Auth::guard('web')->user();
 
+        // Check if user is verified
+        if ($user->status == 0) {
+            Auth::guard('web')->logout();
+            return redirect()->route('user_login')
+                ->with('error', 'Your email is not verified. Please verify your email first.');
+        }
+
         $request->validate([
-            'email' => 'required',
+            'name'  => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
         ]);
 
@@ -198,6 +261,7 @@ class UserController extends Controller
             $request->photo->move(public_path('uploads'), $final_name);
             $user->photo = $final_name;
         }
+
         if ($request->filled('password')) {
             $request->validate([
                 'password' => 'required|min:6|confirmed',
@@ -218,6 +282,5 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->back()->with('success', 'Profile updated successfully');
-
     }
 }

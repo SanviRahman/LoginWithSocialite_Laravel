@@ -2,17 +2,22 @@
 <h1>Login Page:</h1>
 
 @if(session('success'))
-<div>
+<div style="color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #c3e6cb;">
     {{ session('success') }}
 </div>
 @endif
 
 @if(session('error'))
-<div>
+<div style="color: #721c24; background: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
     {{ session('error') }}
 </div>
 @endif
 
+@if(session('warning'))
+<div style="color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ffeaa7;">
+    {{ session('warning') }}
+</div>
+@endif
 
 <form action="{{ route('login_submit') }}" method="post">
     @csrf
@@ -20,7 +25,7 @@
     <!-- Email -->
     <div>
         <label for="email">Email:</label>
-        <input type="email" name="email" id="email" placeholder="Enter Email">
+        <input type="email" name="email" id="email" placeholder="Enter Email" value="{{ old('email') }}">
         @error('email')
         <p style="color:red">{{ $message }}</p>
         @enderror
@@ -40,8 +45,10 @@
     <pre></pre>
 
     <button type="submit">Login</button>
-    <div>
-        <a href="{{ url('user/authorized/google') }}">Sign Up with google</a>
+    <div style="margin-top: 15px;">
+        <a href="{{ url('user/authorized/google') }}">
+            Sign In with Google
+        </a>
     </div>
 
     <pre></pre>
