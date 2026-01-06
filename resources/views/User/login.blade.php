@@ -2,19 +2,19 @@
 <h1>Login Page:</h1>
 
 @if(session('success'))
-<div style="color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #c3e6cb;">
+<div >
     {{ session('success') }}
 </div>
 @endif
 
 @if(session('error'))
-<div style="color: #721c24; background: #f8d7da; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+<div>
     {{ session('error') }}
 </div>
 @endif
 
 @if(session('warning'))
-<div style="color: #856404; background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ffeaa7;">
+<div>
     {{ session('warning') }}
 </div>
 @endif

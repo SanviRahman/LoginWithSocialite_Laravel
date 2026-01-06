@@ -71,27 +71,17 @@ class UserController extends Controller
     }
 
     //User Verification
-    //User Verification
     public function registration_verify($token, $email)
     {
         $user = User::where('email', $email)->where('token', $token)->first();
         if (! $user) {
             return redirect()->route('user_login')->with('error', 'Invalid token or email');
         }
-
         $user->token  = '';
         $user->status = 1;
         $user->save();
 
-        // Check if it's a social login user (Google/Facebook)
-        if ($user->google_id || $user->facebook_id) {
-            // Auto login social users after verification
-            Auth::login($user);
-            return redirect()->route('dashboard')->with('success', 'Email verification successful! You are now logged in.');
-        } else {
-            // Regular users need to login manually
-            return redirect()->route('user_login')->with('success', 'Email verification successful. You can login now.');
-        }
+        return redirect()->route('user_login')->with('success', 'Email verification successful. You can login now.');
     }
 
     //User Login

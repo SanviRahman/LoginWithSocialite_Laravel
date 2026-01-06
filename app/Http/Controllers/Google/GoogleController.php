@@ -78,7 +78,6 @@ class GoogleController extends Controller
 
         $subject = 'Email Verification Required';
         $body    = 'You registered using Google. Please verify your email by clicking the link below: <br><br>';
-        $body   .= '<a href="' . $verification_link . '">Verify Email</a>';
         $body   .= '<br><br><strong>Note:</strong> After verification, you can login using Google or use the following temporary password: <strong>123456dummy</strong>';
 
         Mail::to($user->email)->send(new Websitemail($subject, $body, $verification_link));

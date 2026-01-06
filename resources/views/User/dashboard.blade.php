@@ -1,7 +1,7 @@
 @include('front.top')
 
 @if(session('success'))
-<div style="color: green; background: #d4edda; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #c3e6cb;">
+<div >
     {{ session('success') }}
 </div>
 @endif
